@@ -2,6 +2,7 @@ package dao;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 
 import java.util.ArrayList;
@@ -96,7 +97,10 @@ public class YoutubeVideoDAO extends DAO{
         values.put(YoutubeVideoDBHelper.YTVIDEO_URL, youtubeVideo.getUrl());
         values.put(YoutubeVideoDBHelper.YTVIDEO_CATEGORY, youtubeVideo.getCategory());
 
-        this.db.update(YoutubeVideoDBHelper.YTVIDEO_TABLE_NAME, values, YoutubeVideoDBHelper.YTVIDEO_KEY+ " = ?", new String[] {String.valueOf(youtubeVideo.getId())});
+
+        String whereClause = YoutubeVideoDBHelper.YTVIDEO_KEY + " = ? ";
+
+        this.db.update(YoutubeVideoDBHelper.YTVIDEO_TABLE_NAME, values, whereClause,new String[] {String.valueOf(youtubeVideo.getId())});
 
         close();
     }

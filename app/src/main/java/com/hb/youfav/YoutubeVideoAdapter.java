@@ -4,12 +4,10 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -17,39 +15,16 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
-import dao.YoutubeVideoDAO;
 import model.YoutubeVideo;
 
 public class YoutubeVideoAdapter extends RecyclerView.Adapter<YoutubeVideoAdapter.YoutubeVideoViewHolder> {
 
-    private List<YoutubeVideo> youtubeVideoList;
+    private final OnDeleteItemListener deleteListener;
+    private final List<YoutubeVideo> youtubeVideoList;
 
-    /**
-     * Provide a reference to the type of views that you are using
-     * (custom ViewHolder).
-     */
-    public static class YoutubeVideoViewHolder extends RecyclerView.ViewHolder {
-        private TextView tvTitle;
-        private TextView tvDescription;
-        private LinearLayout itemLayout;
-
-
-        public YoutubeVideoViewHolder(@NonNull View itemView) {
-            super(itemView);
-            // Define click listener for the ViewHolder's View
-
-            tvTitle = (TextView) itemView.findViewById(R.id.rvTitle);
-            tvDescription = (TextView) itemView.findViewById(R.id.rvDescription);
-
-            //On récupère chaque item du recycler view afin de pouvoir gérer le onClick
-            itemLayout = (LinearLayout) itemView.findViewById(R.id.rvItem);
-            //itemView.getParent().registerForContextMenu(itemLayout);
-
-        }
-    }
-
-    public YoutubeVideoAdapter(List<YoutubeVideo> youtubeVideoList) {
+    public YoutubeVideoAdapter(List<YoutubeVideo> youtubeVideoList, OnDeleteItemListener deleteListener) {
         this.youtubeVideoList = youtubeVideoList;
+        this.deleteListener = deleteListener;
     }
 
     // Create new views (invoked by the layout manager)
@@ -61,7 +36,6 @@ public class YoutubeVideoAdapter extends RecyclerView.Adapter<YoutubeVideoAdapte
 
         return new YoutubeVideoViewHolder(view);
     }
-
 
     // Replace the contents of a view (invoked by the layout manager)
     @Override
@@ -89,24 +63,33 @@ public class YoutubeVideoAdapter extends RecyclerView.Adapter<YoutubeVideoAdapte
             @Override
             public boolean onLongClick(View view) {
                 final CharSequence[] items = {"Delete", "Edit"};
+                final CharSequence[] itemsConfirm = {"Yes", "No"};
 
                 AlertDialog.Builder builder = new AlertDialog.Builder(view.getContext());
+                AlertDialog.Builder builderConfirm = new AlertDialog.Builder(view.getContext());
 
-                YoutubeVideoDAO youtubeVideoDAO = new YoutubeVideoDAO(view.getContext());
 
                 builder.setTitle("Select The Action");
+                builderConfirm.setTitle("Are you sure ?");
                 builder.setItems(items, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int item) {
-                        switch (item){
+                        switch (item) {
                             case 0:
                                 //delete case
-                                youtubeVideoDAO.delete(youtubeVideo);
-                                //TODO refresh window
+                                builderConfirm.setItems(itemsConfirm, new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int item) {
+                                        if (item == 0){
+                                            deleteListener.onDeleteItem(youtubeVideo);
+                                        }
+                                    }
+                                });
+                                builderConfirm.show();
                                 break;
                             case 1:
                                 //edit case
-                                Intent intent = new Intent(view.getContext(),EditVideoScreen.class);
+                                Intent intent = new Intent(view.getContext(), EditVideoScreen.class);
                                 intent.putExtra("youtubeVideoId", youtubeVideo.getId());
                                 view.getContext().startActivity(intent);
                                 break;
@@ -117,12 +100,40 @@ public class YoutubeVideoAdapter extends RecyclerView.Adapter<YoutubeVideoAdapte
                 return true;
             }
         });
-
     }
 
     // Return the size of your dataset (invoked by the layout manager)
     @Override
     public int getItemCount() {
         return youtubeVideoList.size();
+    }
+
+
+    public interface OnDeleteItemListener {
+        void onDeleteItem(YoutubeVideo youtubeVideo);
+    }
+
+    /**
+     * Provide a reference to the type of views that you are using
+     * (custom ViewHolder).
+     */
+    public static class YoutubeVideoViewHolder extends RecyclerView.ViewHolder {
+        private final TextView tvTitle;
+        private final TextView tvDescription;
+        private final LinearLayout itemLayout;
+
+
+        public YoutubeVideoViewHolder(@NonNull View itemView) {
+            super(itemView);
+            // Define click listener for the ViewHolder's View
+
+            tvTitle = (TextView) itemView.findViewById(R.id.rvTitle);
+            tvDescription = (TextView) itemView.findViewById(R.id.rvDescription);
+
+            //On récupère chaque item du recycler view afin de pouvoir gérer le onClick
+            itemLayout = (LinearLayout) itemView.findViewById(R.id.rvItem);
+            //itemView.getParent().registerForContextMenu(itemLayout);
+
+        }
     }
 }
